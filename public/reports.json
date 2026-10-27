@@ -1604,5 +1604,16 @@
     "verified": false,
     "dateStatus": "Uploaded",
     "file": "89dbd25a-5a27-49a4-b7e3-05dae1c23af6.pdf"
+  },
+  {
+    "id": "upload-61e96e82-043b-4074-8453-077bc34883fc",
+    "name": "SMachine DN26022517010.pdf",
+    "team": "Max S. Hayes",
+    "date": "2026-03-03",
+    "season": "2025-26",
+    "source": "website",
+    "verified": false,
+    "dateStatus": "Uploaded",
+    "file": "86c1f624-2120-4dac-8d28-d74a3dc364e8.pdf"
   }
 ]
