@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 190" role="img" aria-labelledby="title">
+<title id="title">Designed by Conor Patrick Donelon, shamrock signature</title>
+<rect width="960" height="190" fill="#073c2c"/>
+<text x="30" y="48" fill="#e7c45b" font-family="Arial,sans-serif" font-size="17" letter-spacing="9">DESIGNED BY</text>
+<text x="28" y="129" fill="#e7c45b" font-family="Brush Script MT, Segoe Script, Apple Chancery, cursive" font-style="italic" font-size="75" letter-spacing="-2">Conor Patrick Donelon</text>
+<g transform="translate(852 101)" fill="#e7c45b">
+<path d="M0 0C-13-30-46-27-47-8C-49 12-25 19-6 10C-22 31-8 54 12 47C29 40 26 19 13 8C35 18 55 5 49-13C43-32 15-29 0 0Z"/>
+<path d="M0 7C8 27 10 42 1 64L9 65C19 42 13 21 5 4Z"/>
+</g></svg>
