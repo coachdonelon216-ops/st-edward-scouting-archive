@@ -49,4 +49,4 @@ async function handleAuth(req,res){
  }
  return false;
 }
-module.exports={pool,passwordHash,currentUser,handleAuth};
+module.exports={pool,passwordHash,verifyPassword,currentUser,handleAuth};
