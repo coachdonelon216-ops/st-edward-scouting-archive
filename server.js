@@ -17,6 +17,7 @@ json(res,uploaded.length?200:400,{uploaded:uploaded.length,errors,note:'New file
 http.createServer(async(req,res)=>{let p;try{p=decodeURIComponent(new URL(req.url,'http://localhost').pathname)}catch{return json(res,400,{error:'Bad request'})}
 if(p==='/api/upload'&&req.method==='POST'&&!sameOrigin(req))return json(res,403,{error:'Invalid origin'});
 if(p==='/api/upload'&&req.method==='POST')return upload(req,res).catch(e=>json(res,500,{error:e.message}));
+if(p==='/api/report'&&(['GET','HEAD'].includes(req.method))){const name=new URL(req.url,'http://localhost').searchParams.get('file')||'';if(!/^[a-f0-9-]{36}\.pdf$/i.test(name))return json(res,400,{error:'Invalid PDF file'});try{const data=await github('GET','public/reports/'+name);const pdf=Buffer.from(data.content.replace(/\s/g,''),'base64');res.writeHead(200,{'Content-Type':'application/pdf','Content-Disposition':'inline; filename="scouting-report.pdf"','Content-Length':pdf.length,'Cache-Control':'public, max-age=60','X-Content-Type-Options':'nosniff'});return res.end(req.method==='HEAD'?'':pdf)}catch(e){return json(res,502,{error:'Unable to open PDF: '+e.message})}}
 if(p==='/api/reports'&&req.method==='GET'){try{const latest=await loadIndex();return json(res,200,latest.items)}catch(e){return json(res,502,{error:'Unable to load current reports: '+e.message})}}
 if(p==='/api/upload-status'&&req.method==='GET')return json(res,200,{ready:Boolean(process.env.GITHUB_TOKEN)});
 if(req.method!=='GET'&&req.method!=='HEAD')return json(res,405,{error:'Method not allowed'});
