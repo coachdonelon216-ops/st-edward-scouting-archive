@@ -1582,5 +1582,16 @@
     "verified": false,
     "dateStatus": "Uploaded",
     "file": "a03f6bc0-1b3a-4d5f-9d2e-a04e6c7c572e.pdf"
+  },
+  {
+    "id": "upload-7f790525-2dd4-4ccc-b219-756a3d9a0983",
+    "name": "SMachine DN26021912120.pdf",
+    "team": "Toledo St. John's",
+    "date": "2026-02-20",
+    "season": "2025-26",
+    "source": "website",
+    "verified": false,
+    "dateStatus": "Uploaded",
+    "file": "a0552f82-7185-4c0b-87c9-d5730d9a5f79.pdf"
   }
 ]
