@@ -1,0 +1,24 @@
+{
+  "status": "pending_activation",
+  "notes": "Development-only staff roster. No passwords, invitations, accounts, or database records have been created. Verify email ownership before activation.",
+  "staff": [
+    {
+      "name": "Eric Flannery",
+      "email": "eflannery@sehs.net",
+      "role": "coach",
+      "active": false
+    },
+    {
+      "name": "Pete Latkovic",
+      "email": "petelatkovic@gmail.com",
+      "role": "coach",
+      "active": false
+    },
+    {
+      "name": "Tom Fraser",
+      "email": "tfraser@sehs.net",
+      "role": "coach",
+      "active": false
+    }
+  ]
+}
