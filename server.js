@@ -17,6 +17,7 @@ json(res,uploaded.length?200:400,{uploaded:uploaded.length,errors,note:'New file
 http.createServer(async(req,res)=>{let p;try{p=decodeURIComponent(new URL(req.url,'http://localhost').pathname)}catch{return json(res,400,{error:'Bad request'})}
 if(p==='/api/upload'&&req.method==='POST'&&!sameOrigin(req))return json(res,403,{error:'Invalid origin'});
 if(p==='/api/upload'&&req.method==='POST')return upload(req,res).catch(e=>json(res,500,{error:e.message}));
+if(p==='/api/reports'&&req.method==='GET'){try{const latest=await loadIndex();return json(res,200,latest.items)}catch(e){return json(res,502,{error:'Unable to load current reports: '+e.message})}}
 if(p==='/api/upload-status'&&req.method==='GET')return json(res,200,{ready:Boolean(process.env.GITHUB_TOKEN)});
 if(req.method!=='GET'&&req.method!=='HEAD')return json(res,405,{error:'Method not allowed'});
 const file=path.resolve(root,'.'+(p==='/'?'/index.html':p));if(!file.startsWith(root+path.sep))return json(res,403,{error:'Forbidden'});
