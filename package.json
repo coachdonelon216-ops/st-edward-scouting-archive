@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start": "node server.js",
-    "postinstall": "node extract-reports.js"
+    "postinstall": "node extract-reports.js",
+    "test": "node --test auth/*.test.js"
   },
   "engines": {
     "node": ">=20"
