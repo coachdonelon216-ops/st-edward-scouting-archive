@@ -1,0 +1,19 @@
+# Local credentials and environment files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Dependencies and build artifacts
+node_modules/
+coverage/
+.nyc_output/
+
+# Local database and temporary files
+*.sqlite
+*.sqlite3
+*.log
+.DS_Store
