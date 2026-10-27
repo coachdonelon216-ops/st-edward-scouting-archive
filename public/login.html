@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Staff Login | SEHS Basketball Scout</title>
+<style>
+:root{color-scheme:dark;font-family:Arial,Helvetica,sans-serif;background:#092e23;color:#fff}
+*{box-sizing:border-box}body{margin:0}.schedule{width:100%;display:block;object-fit:contain;background:#efb91b}
+main{max-width:520px;margin:0 auto;padding:36px 20px 65px}
+section{background:#104634;border:1px solid #bda334;border-radius:14px;padding:30px;box-shadow:0 15px 35px #0004}
+h1{text-align:center;font-size:26px;margin:0 0 8px}p{text-align:center;color:#d2e1d8;margin:0 0 28px}
+label{display:block;font-weight:bold;margin:18px 0 8px}input{width:100%;padding:14px;border-radius:7px;border:1px solid #a4b7ab;background:#fff;color:#142b21;font-size:16px}
+button{width:100%;padding:15px;margin-top:24px;background:#f1c735;color:#073c2c;border:0;border-radius:7px;font-size:17px;font-weight:800;cursor:pointer}button:disabled{opacity:.65;cursor:wait}
+#status{min-height:22px;margin:14px 0 0;color:#ffe59b;font-size:14px;text-align:center}
+small{display:block;text-align:center;color:#c1d4c8;margin-top:18px}
+@media(max-width:600px){main{padding:22px 14px 44px}section{padding:22px 18px}h1{font-size:22px}}
+</style></head><body>
+<img class="schedule" src="/schedule-2026-27.png" alt="St. Edward Basketball 2026–2027 season schedule">
+<main><section><h1>ST. EDWARD BASKETBALL</h1><p>Scouting Archive — Authorized Staff Login</p>
+<form id="login"><label for="email">Staff Email</label><input id="email" type="email" autocomplete="username" required>
+<label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required>
+<button type="submit">SIGN IN</button><div id="status" role="status" aria-live="polite"></div></form>
+<small>Access restricted to authorized St. Edward Basketball staff.</small></section></main>
+<script>
+const form=document.getElementById('login'),status=document.getElementById('status');
+form.addEventListener('submit',async e=>{
+e.preventDefault();const button=form.querySelector('button');button.disabled=true;status.textContent='Signing in…';
+try{const response=await fetch('/api/auth/login',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:document.getElementById('email').value,password:document.getElementById('password').value})});
+if(!response.ok){status.textContent=response.status===404?'Staff authentication is not yet enabled.':'Unable to sign in. Check your credentials.';return}
+window.location.assign('/');
+}catch{status.textContent='Unable to connect. Please try again.'}finally{button.disabled=false}
+});
+</script></body></html>
