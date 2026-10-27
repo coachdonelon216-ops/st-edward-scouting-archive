@@ -3,6 +3,10 @@
 const crypto = require('node:crypto');
 const {Pool} = require('pg');
 const pool = new Pool({connectionString: process.env.DATABASE_URL, ssl: process.env.NODE_ENV === 'production' ? {rejectUnauthorized: true} : undefined});
+// Per-instance login throttling for development. Use shared persistent limits before multi-instance production.
+const attempts=new Map();
+function throttle(key){const now=Date.now(),record=attempts.get(key)||{count:0,start:now};if(now-record.start>15*60*1000){record.count=0;record.start=now;}record.count++;attempts.set(key,record);if(attempts.size>5000){for(const [k,v] of attempts)if(now-v.start>15*60*1000)attempts.delete(k);}return record.count>8;}
+function trustedOrigin(req){const origin=req.headers.origin;if(!origin)return false;try{const u=new URL(origin);return u.protocol==='https:'&&u.host===req.headers.host;}catch{return false;}}
 const hash = value => crypto.createHash('sha256').update(value).digest('hex');
 const passwordHash = password => {
  const salt=crypto.randomBytes(16);
@@ -24,10 +28,11 @@ function send(res,status,body,headers={}){res.writeHead(status,{'Content-Type':'
 async function handleAuth(req,res){
  if(req.url==='/api/auth/me'&&req.method==='GET'){const user=await currentUser(req);send(res,user?200:401,user?{user}:{error:'Authentication required'});return true}
  if(req.url==='/api/auth/login'&&req.method==='POST'){
-  if(req.headers.origin){let origin;try{origin=new URL(req.headers.origin)}catch{return send(res,403,{error:'Forbidden'}),true}if(origin.host!==req.headers.host||origin.protocol!=='https:')return send(res,403,{error:'Forbidden'}),true}
+  if(!trustedOrigin(req))return send(res,403,{error:'Invalid origin'}),true;
   let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>8192)return send(res,413,{error:'Request too large'}),true}
   let input;try{input=JSON.parse(raw)}catch{return send(res,400,{error:'Invalid request'}),true}
   const email=String(input.email||'').trim().toLowerCase(),password=String(input.password||'');
+  const key=String(req.socket.remoteAddress||'unknown')+'|'+email;if(throttle(key))return send(res,429,{error:'Too many login attempts. Try again later.'}),true;
   const found=await pool.query('SELECT id,email,role,password_hash FROM staff_users WHERE email=$1 AND active=TRUE',[email]);
   const user=found.rows[0];if(!user||!verifyPassword(password,user.password_hash))return send(res,401,{error:'Invalid credentials'}),true;
   const token=crypto.randomBytes(32).toString('hex');
@@ -35,6 +40,7 @@ async function handleAuth(req,res){
   send(res,200,{user:{id:user.id,email:user.email,role:user.role}},{'Set-Cookie':'sehs_session='+token+'; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=43200'});return true
  }
  if(req.url==='/api/auth/logout'&&req.method==='POST'){
+  if(!trustedOrigin(req))return send(res,403,{error:'Invalid origin'}),true;
   const token=cookie(req,'sehs_session');if(token)await pool.query('DELETE FROM staff_sessions WHERE token_hash=$1',[hash(token)]);
   send(res,200,{ok:true},{'Set-Cookie':'sehs_session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0'});return true
  }
