@@ -23,10 +23,12 @@ if(p==='/login.html'||p==='/schedule-2026-27.png'){/* public login assets */}els
  if(p==='/api/upload'&&req.method==='POST'&&!['administrator','coach'].includes(user.role))return json(res,403,{error:'Insufficient permissions'});
 }
 if(p==='/api/upload'&&req.method==='POST'&&!sameOrigin(req))return json(res,403,{error:'Invalid origin'});
+if(p==='/api/upload'&&req.method==='POST'&&!req.headers.origin)return json(res,403,{error:'Origin required'});
 if(p==='/api/upload'&&req.method==='POST')return upload(req,res).catch(e=>json(res,500,{error:e.message}));
 if(p==='/api/report'&&(['GET','HEAD'].includes(req.method))){const name=new URL(req.url,'http://localhost').searchParams.get('file')||'';if(!/^[a-f0-9-]{36}\.pdf$/i.test(name))return json(res,400,{error:'Invalid PDF file'});try{const data=await github('GET','public/reports/'+name);const pdf=Buffer.from(data.content.replace(/\s/g,''),'base64');res.writeHead(200,{'Content-Type':'application/pdf','Content-Disposition':'inline; filename="scouting-report.pdf"','Content-Length':pdf.length,'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'});return res.end(req.method==='HEAD'?'':pdf)}catch(e){return json(res,502,{error:'Unable to open PDF: '+e.message})}}
 if(p==='/api/reports'&&req.method==='GET'){try{const latest=await loadIndex();return json(res,200,latest.items)}catch(e){return json(res,502,{error:'Unable to load current reports: '+e.message})}}
 if(p==='/api/upload-status'&&req.method==='GET')return json(res,200,{ready:Boolean(process.env.GITHUB_TOKEN)});
 if(req.method!=='GET'&&req.method!=='HEAD')return json(res,405,{error:'Method not allowed'});
 const file=path.resolve(root,'.'+(p==='/'?'/index.html':p));if(!file.startsWith(root+path.sep))return json(res,403,{error:'Forbidden'});
+if(path.basename(file).startsWith('.')||p.split('/').some(segment=>segment.startsWith('.')))return json(res,403,{error:'Forbidden'});
 fs.readFile(file,(err,data)=>{if(err){res.writeHead(404);return res.end('Not found')}res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'});res.end(req.method==='HEAD'?'':data)})}).listen(process.env.PORT||3000,'0.0.0.0');
