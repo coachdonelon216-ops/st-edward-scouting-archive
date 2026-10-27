@@ -1,7 +1,7 @@
 const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const {formidable}=require('formidable');
 const root=path.join(__dirname,'public'),owner='coachdonelon216-ops',repo='st-edward-scouting-archive';
-const types={'.html':'text/html; charset=utf-8','.css':'text/css','.js':'application/javascript','.json':'application/json','.pdf':'application/pdf','.svg':'image/svg+xml'};
+const types={'.html':'text/html; charset=utf-8','.css':'text/css','.js':'application/javascript','.json':'application/json','.pdf':'application/pdf','.svg':'image/svg+xml','.png':'image/png'};
 const json=(res,status,obj)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(JSON.stringify(obj))};
 const submissions=new Map();
 function sameOrigin(req){const origin=req.headers.origin;if(!origin)return true;try{const u=new URL(origin);return u.host===req.headers.host&&u.protocol==='https:'}catch{return false}}
