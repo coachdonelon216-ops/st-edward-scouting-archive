@@ -1,5 +1,6 @@
 const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const {formidable}=require('formidable');
+const {currentUser,handleAuth}=require('./auth/auth');
 const root=path.join(__dirname,'public'),owner='coachdonelon216-ops',repo='st-edward-scouting-archive';
 const types={'.html':'text/html; charset=utf-8','.css':'text/css','.js':'application/javascript','.json':'application/json','.pdf':'application/pdf'};
 const json=(res,status,obj)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(JSON.stringify(obj))};
@@ -15,11 +16,17 @@ for(const f of files){try{const buf=await fs.promises.readFile(f.filepath);if(bu
 if(uploaded.length){let saved=false;for(let attempt=0;attempt<4&&!saved;attempt++){try{const latest=await loadIndex();const combined=latest.items.concat(uploaded);await github('PUT','public/reports.json',{message:'Index '+uploaded.length+' uploaded scouting reports',content:Buffer.from(JSON.stringify(combined,null,2)).toString('base64'),sha:latest.sha,branch:'main'});saved=true}catch(e){if(attempt===3)errors.push({name:'report index',error:e.message})}}}
 json(res,uploaded.length?200:400,{uploaded:uploaded.length,errors,note:'New files appear in the archive when you refresh the page. No Render deployment needed.'})}
 http.createServer(async(req,res)=>{let p;try{p=decodeURIComponent(new URL(req.url,'http://localhost').pathname)}catch{return json(res,400,{error:'Bad request'})}
+if(p.startsWith('/api/auth/')){try{if(await handleAuth(req,res))return;}catch(e){console.error('Authentication error',e);return json(res,503,{error:'Authentication service unavailable'});}return json(res,404,{error:'Not found'});}
+if(p==='/login.html'||p==='/schedule-2026-27.png'){/* public login assets */}else{
+ let user;try{user=await currentUser(req)}catch(e){console.error('Session validation error',e);return json(res,503,{error:'Authentication service unavailable'});}
+ if(!user){if((req.method==='GET'||req.method==='HEAD')&&!p.startsWith('/api/')){res.writeHead(302,{'Location':'/login.html','Cache-Control':'no-store'});return res.end();}return json(res,401,{error:'Authentication required'});}
+ if(p==='/api/upload'&&req.method==='POST'&&!['administrator','coach'].includes(user.role))return json(res,403,{error:'Insufficient permissions'});
+}
 if(p==='/api/upload'&&req.method==='POST'&&!sameOrigin(req))return json(res,403,{error:'Invalid origin'});
 if(p==='/api/upload'&&req.method==='POST')return upload(req,res).catch(e=>json(res,500,{error:e.message}));
-if(p==='/api/report'&&(['GET','HEAD'].includes(req.method))){const name=new URL(req.url,'http://localhost').searchParams.get('file')||'';if(!/^[a-f0-9-]{36}\.pdf$/i.test(name))return json(res,400,{error:'Invalid PDF file'});try{const data=await github('GET','public/reports/'+name);const pdf=Buffer.from(data.content.replace(/\s/g,''),'base64');res.writeHead(200,{'Content-Type':'application/pdf','Content-Disposition':'inline; filename="scouting-report.pdf"','Content-Length':pdf.length,'Cache-Control':'public, max-age=60','X-Content-Type-Options':'nosniff'});return res.end(req.method==='HEAD'?'':pdf)}catch(e){return json(res,502,{error:'Unable to open PDF: '+e.message})}}
+if(p==='/api/report'&&(['GET','HEAD'].includes(req.method))){const name=new URL(req.url,'http://localhost').searchParams.get('file')||'';if(!/^[a-f0-9-]{36}\.pdf$/i.test(name))return json(res,400,{error:'Invalid PDF file'});try{const data=await github('GET','public/reports/'+name);const pdf=Buffer.from(data.content.replace(/\s/g,''),'base64');res.writeHead(200,{'Content-Type':'application/pdf','Content-Disposition':'inline; filename="scouting-report.pdf"','Content-Length':pdf.length,'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'});return res.end(req.method==='HEAD'?'':pdf)}catch(e){return json(res,502,{error:'Unable to open PDF: '+e.message})}}
 if(p==='/api/reports'&&req.method==='GET'){try{const latest=await loadIndex();return json(res,200,latest.items)}catch(e){return json(res,502,{error:'Unable to load current reports: '+e.message})}}
 if(p==='/api/upload-status'&&req.method==='GET')return json(res,200,{ready:Boolean(process.env.GITHUB_TOKEN)});
 if(req.method!=='GET'&&req.method!=='HEAD')return json(res,405,{error:'Method not allowed'});
 const file=path.resolve(root,'.'+(p==='/'?'/index.html':p));if(!file.startsWith(root+path.sep))return json(res,403,{error:'Forbidden'});
-fs.readFile(file,(err,data)=>{if(err){res.writeHead(404);return res.end('Not found')}res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream','X-Content-Type-Options':'nosniff'});res.end(req.method==='HEAD'?'':data)})}).listen(process.env.PORT||3000,'0.0.0.0');
+fs.readFile(file,(err,data)=>{if(err){res.writeHead(404);return res.end('Not found')}res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'});res.end(req.method==='HEAD'?'':data)})}).listen(process.env.PORT||3000,'0.0.0.0');
