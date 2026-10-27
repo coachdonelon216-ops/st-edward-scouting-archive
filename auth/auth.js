@@ -32,9 +32,12 @@ async function handleAuth(req,res){
   let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>8192)return send(res,413,{error:'Request too large'}),true}
   let input;try{input=JSON.parse(raw)}catch{return send(res,400,{error:'Invalid request'}),true}
   const email=String(input.email||'').trim().toLowerCase(),password=String(input.password||'');
-  const key=String(req.socket.remoteAddress||'unknown')+'|'+email;if(throttle(key))return send(res,429,{error:'Too many login attempts. Try again later.'}),true;
+  const ip=String(req.socket.remoteAddress||'unknown');
+  if(throttle('ip:'+ip)||throttle('account:'+email))return send(res,429,{error:'Too many login attempts. Try again later.'}),true;
   const found=await pool.query('SELECT id,email,role,password_hash FROM staff_users WHERE email=$1 AND active=TRUE',[email]);
   const user=found.rows[0];if(!user||!verifyPassword(password,user.password_hash))return send(res,401,{error:'Invalid credentials'}),true;
+  // Clear the account-specific failure counter after successful authentication.
+  attempts.delete('account:'+email);
   const token=crypto.randomBytes(32).toString('hex');
   await pool.query("INSERT INTO staff_sessions(token_hash,user_id,expires_at) VALUES($1,$2,NOW()+INTERVAL '12 hours')",[hash(token),user.id]);
   send(res,200,{user:{id:user.id,email:user.email,role:user.role}},{'Set-Cookie':'sehs_session='+token+'; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=43200'});return true
