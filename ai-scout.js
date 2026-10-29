@@ -9,8 +9,8 @@ if(req.method!=='POST')return send(res,405,{error:'POST required'}),true;
 if(!auth(req)||!sameOrigin(req))return send(res,403,{error:'Unauthorized'}),true;
 if(!process.env.OPENAI_API_KEY)return send(res,503,{error:'AI not configured. Add OPENAI_API_KEY to Render Environment. API usage is billed separately.'}),true;
 const ip=String(req.headers['x-forwarded-for']||req.socket.remoteAddress||'').split(',')[0];
-const now=Date.now(),entry=hits.get(ip)||{start:now,count:0};if(now-entry.start>3600000){entry.start=now;entry.count=0}entry.count++;hits.set(ip,entry);if(hits.size>2000)for(const [k,v] of hits)if(now-v.start>3600000)hits.delete(k);
-if(entry.count>15)return send(res,429,{error:'AI analysis limit reached (15 per hour).'}),true;
+const now=Date.now(),entry=hits.get(ip)||{start:now,count:0};if(now-entry.start>86400000){entry.start=now;entry.count=0}entry.count++;hits.set(ip,entry);if(hits.size>2000)for(const [k,v] of hits)if(now-v.start>3600000)hits.delete(k);
+if(entry.count>220)return send(res,429,{error:'AI analysis limit reached (220 per day).'}),true;
 try{
 const d=await body(req);
 if(!Array.isArray(d.frames)||d.frames.length<2||d.frames.length>8||d.frames.some(f=>typeof f!=='string'||f.length>850000||!/^data:image\/jpeg;base64,[a-zA-Z0-9+/=]+$/.test(f)))return send(res,400,{error:'Supply 2–8 JPEG frames, each under 625 KB.'}),true;
