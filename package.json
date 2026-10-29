@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "formidable": "^3.5.4",
-    "adm-zip": "^0.5.16"
+    "adm-zip": "^0.5.16",
+    "@aws-sdk/client-s3": "^3.800.0",
+    "@aws-sdk/s3-request-presigner": "^3.800.0"
   }
 }
